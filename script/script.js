@@ -345,6 +345,7 @@
           boss.width = 128;
           boss.life = 0;
           girl.hp = 3;
+          bossBigSound.stop();
           restart = true;
         }
       }
