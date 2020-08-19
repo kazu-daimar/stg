@@ -41,6 +41,8 @@
   let heartArray = [];
   let itemHeartArray = [];
 
+  let highScore;
+
   window.addEventListener("load", () => {
     util = new Canvas2DUtility(document.body.querySelector("#main_canvas"));
     canvas = util.canvas;
@@ -142,8 +144,8 @@
     weapon3 = new Character(ctx2, CANVAS2_WIDTH / 2, 300, 64, 64, 1, "./image/sword2.png");
     weapon4 = new Character(ctx2, CANVAS2_WIDTH / 2, 400, 64, 64, 1, "./image/bomb.png");
     for(i = 0; i < HP_MAX_COUNT / 2; ++i) {
-      heartArray[i] = new Character(ctx2, CANVAS2_WIDTH / 4 + 32 * i, CANVAS2_HEIGHT * 0.8, 32, 32, 1, "./image/heart.png");
-      heartArray[i + 3] = new Character(ctx2, CANVAS2_WIDTH / 4 + 32 * i, CANVAS2_HEIGHT * 0.85, 32, 32, 0, "./image/heart.png");
+      heartArray[i] = new Character(ctx2, CANVAS2_WIDTH / 4 + 32 * i, 470, 32, 32, 1, "./image/heart.png");
+      heartArray[i + 3] = new Character(ctx2, CANVAS2_WIDTH / 4 + 32 * i, 500, 32, 32, 0, "./image/heart.png");
     }
     girl = new Girl(ctx, util, 0, 0, 48, 48, "./image/girl.png");
     girl.setHeartArray(heartArray);
@@ -216,7 +218,7 @@
       enemyArray[ENEMY_RED_MAX_COUNT + ENEMY_BLUE_MAX_COUNT + i].setAttackTarget(girl);
       enemyArray[ENEMY_RED_MAX_COUNT + ENEMY_BLUE_MAX_COUNT + i].setItemHeartArray(itemHeartArray);
     }
-    for(i = 0; i < ENEMY_RED_MAX_COUNT + ENEMY_BLUE_MAX_COUNT; ++i) {
+    for(i = 0; i < ENEMY_RED_MAX_COUNT + ENEMY_BLUE_MAX_COUNT + ENEMY_LARGE_MAX_COUNT; ++i) {
       enemyArray[i].setSound(damageSound);
     }
 
@@ -548,12 +550,14 @@
       }
 
       if(boss.life > 10000 && boss.life <= 15000) {
+        if(boss.mode === "floating") {gameScore += 2000;}
         boss.setMode("rainy");
       }
 
       if(boss.life > 5000 && boss.life <= 10000) {
         if(boss.mode === "rainy") {
           boss.posFlg = false;
+          gameScore += 2000;
           itemHeartArray[0].set(boss.position.x, boss.position.y);
         }
         boss.setMode("rampage");
@@ -564,6 +568,7 @@
           boss.escapeStartTime = Date.now();
           boss.posFlg = false;
           boss.callRush = true;
+          gameScore += 2000;
           bossBigSound.play();
         }
 
@@ -619,8 +624,16 @@
     });
 
     scene.add("gameclear", (time) => {
+
+      if(gameScore >= highScore) {
+        if(window.localStorage){
+          window.localStorage.setItem("highScore" , gameScore);
+        }
+      }
+
       if(scene.frame === 200) {
         clearSound.play();
+        if(girl.hp > 1) {gameScore += 1000 * girl.hp;}
       }
       if(scene.frame >= 200) {
         let textWidth = CANVAS_WIDTH / 2;
@@ -639,6 +652,12 @@
     });
 
     scene.add("gameover", (time) => {
+      if(gameScore >= highScore) {
+        if(window.localStorage){
+          window.localStorage.setItem("highScore" , gameScore);
+        }
+      }
+
       let textWidth = CANVAS_WIDTH / 2;
       let loopWidth = CANVAS_WIDTH + textWidth;
       let x = CANVAS_WIDTH - (scene.frame * 2) % loopWidth;
@@ -676,9 +695,24 @@
   function infomation() {
     if(girl.strongestMode === true) {
       ctx2.font = "bold 20px sans-serif";
-      util2.drawText("最強モード発動中", 0, 50, "#f000f0", CANVAS2_WIDTH);
+      util2.drawText("最強モード発動中", 0, 25, "#f000f0", CANVAS2_WIDTH);
       gameScore = 0;
     }
+    if(girl.unbeatableMode === true) {
+      ctx2.font = "bold 20px sans-serif";
+      util2.drawText("無敵モード発動中", -2, 50, "#f000f0", CANVAS2_WIDTH);
+      gameScore = 0;
+    }
+    if(window.localStorage){
+      highScore = parseInt(window.localStorage.getItem("highScore"));
+      if(!highScore) {highScore = 0;}
+    } 
+    ctx2.font = "bold 22px monospace";
+    if(gameScore > highScore) {highScore = gameScore;}
+    util2.drawText("HIGHSCORE", 4, 545, "#ffffff");
+    util2.drawText(zeroPadding(highScore, 5), 24, 570, "#ffffff");
+    util2.drawText("SCORE", 24, 605, "#ffffff");
+    util2.drawText(zeroPadding(gameScore, 5), 24, 630, "#ffffff");
   }
 
   function render() {
@@ -686,9 +720,6 @@
     ctx.globalAlpha = 1.0;
     util.drawRect(0, 0, canvas.width, canvas.height, "#111122");
     util2.drawRect(0, 0, canvas2.width, canvas2.height, "#111122");
-
-    ctx2.font = "bold 24px monospace";
-    util2.drawText(zeroPadding(gameScore, 5), 24, 600, "#ffffff");
 
     scene.update();
 

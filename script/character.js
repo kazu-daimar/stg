@@ -154,6 +154,7 @@ class Cursor extends Character {
     super(ctx, x, y, w, h, 1, imagePath);
 
     this.upCount = 0;
+    this.downCount = 0;
   }
 
   setGirl(girl) {
@@ -163,6 +164,9 @@ class Cursor extends Character {
   update() {
     if(this.upCount >= 30) {
       this.girl.strongestMode = true;
+    }
+    if(this.downCount >= 30) {
+      this.girl.unbeatableMode = true;
     }
     if(this.control === true) {
       if(window.isKeyDown.key_ArrowUp === true) {
@@ -185,6 +189,7 @@ class Cursor extends Character {
       }
       if(this.position.y > 400) {
         this.position.y = 400;
+        this.downCount += 1;
       }
     }
     this.draw();
@@ -213,7 +218,8 @@ class Girl extends Character {
     this.timer = 0;
     this.immortal = false;
     this.heartarray = [];
-    this.devilMode = false;
+    this.strongestMode = false;
+    this.unbeatableMode = false;
   }
 
   setComing(startX, startY, endX, endY) {
@@ -266,6 +272,9 @@ class Girl extends Character {
       for(let i = 0; i < this.bombArray.length; ++i) {
         this.bombArray[i].power = 1000;
       }
+    }
+    if(this.unbeatableMode === true) {
+      this.hp = 6;
     }
 
     for(let i = this.hp; i < this.heartArray.length; ++i) {
@@ -513,7 +522,7 @@ class Enemy extends Character {
 
       case "large":
         this.position.y += 1.0;
-        if(this.frame < 1000) {
+        if(this.frame < 500) {
           if(this.position.y >= this.ctx.canvas.height / 2) {
             this.position.y = this.ctx.canvas.height / 2;
           }
@@ -538,7 +547,7 @@ class Enemy extends Character {
 
         case "large2":
           this.position.y += 1.0;
-          if(this.frame < 1000) {
+          if(this.frame < 500) {
             if(this.position.y >= this.ctx.canvas.height / 3) {
               this.position.y = this.ctx.canvas.height / 3;
             }
