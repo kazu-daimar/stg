@@ -362,7 +362,7 @@
       ctx.font = "bold 20px sans-serif";
       util.drawText("※注意  音が出ます", 5, CANVAS_HEIGHT - 5, "#ffffff", CANVAS_WIDTH);
       if(window.isKeyDown.key_s === true) {
-        scene.use("boss_coming");
+        scene.use("block_default_type");
       }
     })
 
