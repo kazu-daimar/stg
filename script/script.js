@@ -54,7 +54,12 @@
     canvas2.height = CANVAS2_HEIGHT;
 
     let button = document.body.querySelector("#start_button");
+
     button.addEventListener("click", () => {
+
+      let spinner = document.body.querySelector('#loading-spinner');
+      spinner.classList.remove("start");
+      spinner.classList.add("spinner");
       button.disabled = true;
       damageSound = new Sound();
       itemHeartSound = new Sound();
@@ -112,6 +117,7 @@
                         }
                         initialize();
                         loadCheck();
+                        spinner.classList.add("loaded");
                       });
                     });
                   });
@@ -363,7 +369,7 @@
       ctx.font = "bold 20px sans-serif";
       util.drawText("※注意  音が出ます", 5, CANVAS_HEIGHT - 5, "#ffffff", CANVAS_WIDTH);
       if(window.isKeyDown.key_s === true) {
-        scene.use("block_default_type");
+        scene.use("intro");
       }
     })
 
