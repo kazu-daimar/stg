@@ -70,7 +70,10 @@ class Character {
     }
   }
 
-  
+  setSound(sound) {
+    this.sound = sound;
+  }
+
   setVector(x, y) {
     this.vector.set(x, y);
   }
@@ -132,8 +135,14 @@ class Item extends Character {
     if(this.life === 0) {return;}
     this.position.y += 2.0;
     let dist = this.position.distance(this.girl.position);
-    if(dist < this.width / 2) {
+    if(dist <= this.girl.height / 2) {
       this.girl.hp += 1;
+      if(this.sound != null){
+        this.sound.play();
+      }
+      if(this.girl.hp >= 6) {
+        this.girl.hp = 6;
+      }
       this.life = 0;
     }
     this.draw();
@@ -144,20 +153,35 @@ class Cursor extends Character {
   constructor(ctx, x, y, w, h, imagePath) {
     super(ctx, x, y, w, h, 1, imagePath);
 
+    this.upCount = 0;
+  }
+
+  setGirl(girl) {
+    this.girl = girl;
   }
 
   update() {
+    if(this.upCount >= 30) {
+      this.girl.strongestMode = true;
+    }
     if(this.control === true) {
       if(window.isKeyDown.key_ArrowUp === true) {
         this.position.y -= 100;
+        if(this.sound != null){
+          this.sound.play();
+        }
         window.isKeyDown.key_ArrowUp = false;
       }
       if(window.isKeyDown.key_ArrowDown === true) {
         this.position.y += 100;
+        if(this.sound != null){
+          this.sound.play();
+        }
         window.isKeyDown.key_ArrowDown = false;
       }
       if(this.position.y < 100) {
         this.position.y = 100;
+        this.upCount += 1;
       }
       if(this.position.y > 400) {
         this.position.y = 400;
@@ -175,7 +199,7 @@ class Girl extends Character {
     this.hp = 3;
     this.util = util;
     this.shotCheckCounter = 0;
-    this.shotInterval = 10;
+    this.shotInterval = 20;
     this.bombCheckCounter = 0;
     this.bombInterval = 10;
     this.isComing = false;
@@ -183,12 +207,13 @@ class Girl extends Character {
     this.comingStartPosition = null;
     this.comingEndPosition = null;
     this.shotArray = null;
-    this.singleShotArray = null;
+    this.miniShotArray = null;
     this.beam = null;
     this.bombArray = null;
     this.timer = 0;
     this.immortal = false;
     this.heartarray = [];
+    this.devilMode = false;
   }
 
   setComing(startX, startY, endX, endY) {
@@ -210,9 +235,9 @@ class Girl extends Character {
     this.beam = beam;
   }
 
-  setShotArray(shotArray, singleShotArray) {
+  setShotArray(shotArray, miniShotArray) {
     this.shotArray = shotArray;
-    this.singleShotArray = singleShotArray;
+    this.miniShotArray = miniShotArray;
   }
 
   setBombArray(bombArray) {
@@ -229,6 +254,19 @@ class Girl extends Character {
 
 
   update() {
+    if(this.strongestMode === true) {
+      for(let i = 0; i < this.shotArray.length; ++i) {
+        this.shotArray[i].power = 250;
+      }
+      for(let i = 0; i < this.miniShotArray.length; ++i) {
+        this.miniShotArray[i].power = 200;
+      }
+      this.beam.power = 50;
+      this.sword.power = 1000;
+      for(let i = 0; i < this.bombArray.length; ++i) {
+        this.bombArray[i].power = 1000;
+      }
+    }
 
     for(let i = this.hp; i < this.heartArray.length; ++i) {
       this.heartArray[i].life = 0;
@@ -284,23 +322,23 @@ class Girl extends Character {
                     break;
                   }
                 }
-                for(i = 0; i < this.singleShotArray.length; ++i) {
-                  if(this.singleShotArray[i * 6].life <= 0 && this.singleShotArray[i * 6 + 1].life <= 0 &&
-                    this.singleShotArray[i * 6 + 2].life <= 0 && this.singleShotArray[i * 6 + 3].life <= 0 &&
-                    this.singleShotArray[i * 6 + 4].life <= 0 && this.singleShotArray[i * 6 + 5].life <= 0) {
+                for(i = 0; i < this.miniShotArray.length; ++i) {
+                  if(this.miniShotArray[i * 6].life <= 0 && this.miniShotArray[i * 6 + 1].life <= 0 &&
+                    this.miniShotArray[i * 6 + 2].life <= 0 && this.miniShotArray[i * 6 + 3].life <= 0 &&
+                    this.miniShotArray[i * 6 + 4].life <= 0 && this.miniShotArray[i * 6 + 5].life <= 0) {
 
-                    this.singleShotArray[i * 6].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6].setVectorFromAngle(this.radCW(280));
-                    this.singleShotArray[i * 6 + 1].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6 + 1].setVectorFromAngle(this.radCW(290));
-                    this.singleShotArray[i * 6 + 2].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6 + 2].setVectorFromAngle(this.radCW(300));
-                    this.singleShotArray[i * 6 + 3].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6 + 3].setVectorFromAngle(this.radCW(260));
-                    this.singleShotArray[i * 6 + 4].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6 + 4].setVectorFromAngle(this.radCW(250));
-                    this.singleShotArray[i * 6 + 5].set(this.position.x, this.position.y - this.height / 2);
-                    this.singleShotArray[i * 6 + 5].setVectorFromAngle(this.radCW(240));
+                    this.miniShotArray[i * 6].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6].setVectorFromAngle(this.radCW(280));
+                    this.miniShotArray[i * 6 + 1].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6 + 1].setVectorFromAngle(this.radCW(290));
+                    this.miniShotArray[i * 6 + 2].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6 + 2].setVectorFromAngle(this.radCW(300));
+                    this.miniShotArray[i * 6 + 3].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6 + 3].setVectorFromAngle(this.radCW(260));
+                    this.miniShotArray[i * 6 + 4].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6 + 4].setVectorFromAngle(this.radCW(250));
+                    this.miniShotArray[i * 6 + 5].set(this.position.x, this.position.y - this.height / 2, 8, 20);
+                    this.miniShotArray[i * 6 + 5].setVectorFromAngle(this.radCW(240));
                     this.shotCheckCounter = -this.shotInterval;
                     break;
                   }
@@ -331,7 +369,7 @@ class Girl extends Character {
 
         if(window.isKeyDown.key_x === true) {
           this.speed = 2.5;
-          this.util.drawCircle(this.position.x, this.position.y, 12, "#ff0000");
+          this.util.drawCircle(this.position.x, this.position.y, 8, "#ff0000");
           this.ctx.globalAlpha = 0.5;
         }else{
           this.speed = 6;
@@ -350,11 +388,11 @@ class Enemy extends Character {
     this.type = "default";
     this.frame = 0;
     this.speed = 3;
-    this.power = 25;
-    this.shotArray = null;
+    this.power = 1;
+    this.shotArray = [];
     this.attackTarget = null;
     this.targetArray = [];
-    this.item = null;
+    this.itemHeartArray = [];
     this.rushVector = 0;
   }
 
@@ -365,8 +403,8 @@ class Enemy extends Character {
     this.frame = 0;
   }
 
-  setItem(item) {
-    this.item = item;
+  setItemHeartArray(itemHeartArray) {
+    this.itemHeartArray = itemHeartArray;
   }
 
   setShotArray(shotArray) {
@@ -406,6 +444,7 @@ class Enemy extends Character {
           }
           for(let i = 0; i < this.explosionArray.length; ++i) {
             if(this.explosionArray[i].life !== true) {
+              this.explosionArray[i].setSound(this.sound);
               this.explosionArray[i].set(v.position.x, v.position.y);
               break;
             }
@@ -432,6 +471,10 @@ class Enemy extends Character {
         break;
 
       case "rush":
+        this.position.y += 8.0;
+        if(this.position.y === this.ctx.canvas.height + this.height / 2) {
+          this.position.y = -this.height / 2;
+        }
         if(this.frame === 1000) {
           let tx = this.attackTarget.position.x / 2 - this.position.x;
           let ty = this.attackTarget.position.y - this.position.y;
@@ -452,7 +495,7 @@ class Enemy extends Character {
         break;
 
       case "wall":
-        if(this.frame % 20 === 0) {
+        if(this.frame % 40 === 0) {
           let tx = this.attackTarget.position.x - this.position.x;
           let ty = this.attackTarget.position.y - this.position.y;
           let tv = Position.calcNormal(tx, ty);
@@ -577,12 +620,15 @@ class Boss extends Character {
     super(ctx, x, y, w, h, 0, imagePath);
     this.mode = "";
     this.frame = 0;
-    this.power = 25;
+    this.power = 1;
     this.speed = 3;
     this.shotArray = null;
     this.homingArray = null;
     this.attackTarget = null;
+    this.immortalFlg = false;
     this.posFlg = false;
+    this.rainyVectorR = 270;
+    this.rainyVectorL = 270;
     this.posTopFlg = false;
     this.fallFlg = false;
     this.callRush = false;
@@ -593,6 +639,10 @@ class Boss extends Character {
     this.position.set(x, y);
     this.life = life;
     this.frame = 0;
+  }
+
+  setSoundShock(soundShock) {
+    this.soundShock = soundShock;
   }
 
   setShotArray(shotArray) {
@@ -613,13 +663,16 @@ class Boss extends Character {
 
   update() {
     if(this.life <= 0){return;}
+    if(this.posFlg === "false") {
+      this.immortalFlg = true;
+    }
+    
 
     let v = this.attackTarget;
     if(this.life <= 0 || v.life <= 0) {return;}
-    if(v.position.x < this.position.x + this.width / 2 + v.width / 6 &&
-      v.position.x > this.position.x - this.width / 2 - v.width / 6 &&
-      v.position.y < this.position.y + this.height / 2 + v.height / 6 &&
-      v.position.y > this.position.y - this.height / 2 - v.height / 6) {
+    let dist = this.position.distance(v.position);
+
+    if(dist <= this.width / 2 + v.width / 6) {
     if(v.isComing === true){return;}
       if(v.timer + 3000 < Date.now()) {
         v.immortal =false;
@@ -628,12 +681,17 @@ class Boss extends Character {
         v.life -= this.power;
       }
       if(v.life <= 0) {
-        v.hp -= 1;
+        if(this.mode === "BIG!!") {
+          v.hp = 0;
+        }else{
+          v.hp -= 1;
+        }
         if(v.hp >= 1) {
           v.setComing(v.position.x, v.position.y, v.position.x, v.position.y);
         }
         for(let i = 0; i < this.explosionArray.length; ++i) {
           if(this.explosionArray[i].life !== true) {
+            this.explosionArray[i].setSound(this.sound);
             this.explosionArray[i].set(v.position.x, v.position.y);
             break;
           }
@@ -642,10 +700,13 @@ class Boss extends Character {
     }
     let tx = this.ctx.canvas.width / 2 - this.position.x;
 
+    this.setVectorFromAngle(-this.frame / 10);
+
     switch(this.mode){
 
       case "rainy":
         if(this.posFlg === false) {
+          this.immortalFlg = true;
           this.position.x = Math.floor(this.position.x);
           if(tx > 0){
             this.position.x += 1.0;
@@ -654,6 +715,7 @@ class Boss extends Character {
           }
           if(this.position.x === this.ctx.canvas.width / 2) {
             this.posFlg = true;
+            this.immortalFlg = false;
             this.frame = -1;
           } 
         }else{
@@ -662,21 +724,39 @@ class Boss extends Character {
           if(this.frame % 12 === 0) {
             for(i = this.ctx.canvas.width / 20; i < this.ctx.canvas.width; i += this.ctx.canvas.width / 4) {
               if(this.frame % 24 === 0) {
-                this.rainy(Math.random() * 480, 0, 1.0, 4.0, 1.0);
+                this.rainy(Math.random() * 480, 0, 75, 4.0);
               }else{
-                this.rainy(Math.random() * 480, 0, -1.0, 4.0, 1.0);
+                this.rainy(Math.random() * 480, 0, 105, 4.0);
               }
             }
           }
+          let tx = this.attackTarget.position.x - this.position.x;
+          let ty = this.attackTarget.position.y - this.position.y;
+          let tv = Position.calcNormal(tx, ty);
+          let r = Math.PI / 180;
 
-          this.fire(this.position.x, this.position.y, 1.0, 4.0, 8.0);
-          this.fire(this.position.x, this.position.y, -1.0, 4.0, 8.0);
+
+
+          this.rainyVectorR += 1;
+          this.rainyVectorL -= 1;
+
+          if(this.rainyVectorR >= 435) {
+            this.rainyVectorR = 435;
+          }
+          if(this.rainyVectorL <= 105) {
+            this.rainyVectorL = 105;
+          }
+          if(this.frame % 5 === 0) {
+            this.fire(this.position.x, this.position.y, Math.cos(r * this.rainyVectorR), Math.sin(r * this.rainyVectorR), 8.0);
+            this.fire(this.position.x, this.position.y, Math.cos(r * this.rainyVectorL), Math.sin(r * this.rainyVectorL), 8.0);
+          }
         }
 
         break;
       case "rampage":
 
         if(this.posFlg === false) {
+          this.immortalFlg = true;
           this.position.x = Math.floor(this.position.x);
           if(tx > 0){
             this.position.x += 1.0;
@@ -685,6 +765,7 @@ class Boss extends Character {
           }
           if(this.position.x === this.ctx.canvas.width / 2) {
             this.posFlg = true;
+            this.immortalFlg = false;
             this.frame = -1;
           }
         }else{
@@ -698,32 +779,41 @@ class Boss extends Character {
             this.position.y = this.height / 2;
             this.posTopFlg = true;
           }
-          if(this.posTopFlg === true) {
-            if(this.fallFlg === true) {
-              this.position.y += 15.0;
-              --this.frame;
-            }
-            if(this.attackTarget.position.x > this.position.x - this.width / 2 &&
-               this.attackTarget.position.x < this.position.x + this.width / 2) {
-              this.fallFlg = true;
-            }
-          }
 
-          if(this.position.y > this.ctx.canvas.height - this.height / 2) {
-            this.posTopFlg = false;
-            this.fallFlg = false;
-            this.position.y = this.ctx.canvas.height - this.height / 2;
-            for(let i = 180; i < 361; i += 7.5) {
-              let r = i * Math.PI / 180;
-              let s = Math.sin(r);
-              let c = Math.cos(r);
-              this.splinter(this.position.x, this.ctx.canvas.height - this.shotArray[0].height / 2, c, s, 6.0);
+          if(this.frame >= 50) {
+
+            if(this.posTopFlg === true) {
+              if(this.fallFlg === true) {
+                this.position.y += 15.0;
+                --this.frame;
+              }
+              if(this.attackTarget.position.x > this.position.x - this.width / 2 &&
+                 this.attackTarget.position.x < this.position.x + this.width / 2 &&
+                 this.attackTarget.position.y > this.position.y) {
+                this.fallFlg = true;
+              }
+            }
+  
+            if(this.position.y > this.ctx.canvas.height) {
+              this.posTopFlg = false;
+              this.fallFlg = false;
+              this.position.y = this.ctx.canvas.height;
+              if(this.soundShock != null){
+                this.soundShock.play();
+              }
+              for(let i = 180; i < 361; i += 7.5) {
+                let r = i * Math.PI / 180;
+                let s = Math.sin(r);
+                let c = Math.cos(r);
+                this.splinter(this.position.x, this.ctx.canvas.height - this.shotArray[0].height / 2, c, s, 6.0);
+              }
             }
           }
         }
         break;
       case "BIG!!":
         if(this.posFlg === false) {
+          this.immortalFlg = true;
           this.position.x = this.ctx.canvas.width / 2;
           let ty = this.ctx.canvas.height * 0.2 - this.position.y;
           if(ty > 0) {
@@ -736,14 +826,16 @@ class Boss extends Character {
             this.position.y -= 1.0;
           }
           this.position.x = Math.floor(this.position.x);
-          console.log(this.position.x);
+
           if(this.position.y === this.ctx.canvas.height * 0.2) {
             this.position.y = this.ctx.canvas.height * 0.2;
             if(this.position.x === this.ctx.canvas.width / 2) {
               this.posFlg = true;
+              this.immortalFlg = false;
             }
           }
         }else{
+          this.setVectorFromAngle(-this.frame / 4);
           this.width += 1.0;
           this.height += 1.0;
         }
@@ -754,11 +846,15 @@ class Boss extends Character {
           this.position.y = 100;
           this.mode = 'floating';
           this.frame = 0;
+          this.immortalFlg = false;
+        }else{
+          this.immortalFlg = true;
         }
         break;
       case 'escape':
+        this.frame = -1;
         this.position.y -= this.speed * 3;
-
+        this.immortalFlg = true;
         break;
       case 'floating':
         if(this.frame % 1000 < 500){
@@ -779,16 +875,17 @@ class Boss extends Character {
         break;
     }
 
+
     this.rotationDraw();
     ++this.frame;
   }
 
-  rainy(setX = this.position.x, setY = this.position.y, x = 0.0, y = 1.0, speed = 5.0) {
+  rainy(setX = this.position.x, setY = this.position.y, angle, speed = 5.0) {
     for(let i = 1000; i < this.shotArray.length; ++i) {
       if(this.shotArray[i].life <= 0) {
         this.shotArray[i].set(setX, setY);
         this.shotArray[i].setSpeed(speed);
-        this.shotArray[i].setVector(x, y);
+        this.shotArray[i].setVectorFromAngle(angle * Math.PI / 180);
         break;
       }
     }
@@ -832,7 +929,7 @@ class Shot extends Character {
   constructor(ctx, x, y, w, h, imagePath) {
     super(ctx, x, y, w, h, 0, imagePath);
     this.speed = 8;
-    this.power = 30;
+    this.power = 25;
     this.targetArray = [];
     this.explosionArray = [];
   }
@@ -880,42 +977,53 @@ class Shot extends Character {
 
     this.targetArray.map((v) => {
       if(this.life <= 0 || v.life <= 0) {return;}
+      if(v instanceof Boss === true) {
+        if(v.immortalFlg　=== true) {
+          return;
+        }
+      }
       let dist = this.position.distance(v.position);
 
-      if(v instanceof Boss === true) {
-        if(this.position.x < v.position.x + v.width / 2 + this.width / 6 &&
-          this.position.x > v.position.x - v.width / 2 - this.width / 6 &&
-          this.position.y < v.position.y + v.height / 2 + this.height / 6 &&
-          this.position.y > v.position.y - v.height / 2 - this.height / 6){
-            v.life -= this.power;
-            this.life = 0;
-            console.log(v.life);
-          }
-      }
+      if(dist <= this.width / 2 + v.width / 2) {
 
-      if(dist <= (this.width + v.width) / 4) {
-        if(v instanceof Boss === true) {return;}
         if(v instanceof Girl === true){
           if(v.isComing === true){return;}
-        }
-        if(v.timer + 3000 < Date.now()) {
-          v.immortal =false;
-        }
-        if(v instanceof Girl === true) {
-          if(v.immortal === false) {
-            v.life -= this.power;
+          if(dist <= v.width / 4) {
+            if(v.timer + 3000 < Date.now()) {
+              v.immortal = false;
+            }
+            if(v.immortal === false) {
+              v.life -= this.power;
+              if(v.life <= 0) {
+                for(let i = 0; i < this.explosionArray.length; ++i) {
+                  if(this.explosionArray[i].life !== true) {
+                    this.explosionArray[i].set(v.position.x, v.position.y);
+                    break;
+                  }
+                }
+                v.hp -= 1;
+                if(v.hp >= 1) {
+                  v.setComing(v.position.x, v.position.y, v.position.x, v.position.y);
+                }
+              }
+            }
+            this.life = 0;
           }
+
+
         }else{
           v.life -= this.power;
+          if(this.sound != null){
+            this.sound.play();
+          }
+          this.life = 0;
         }
+
         console.log(v.life);
         if(v.life <= 0) {
-          v.hp -= 1;
-          if(v.hp >= 1) {
-            v.setComing(v.position.x, v.position.y, v.position.x, v.position.y);
-          }
           for(let i = 0; i < this.explosionArray.length; ++i) {
             if(this.explosionArray[i].life !== true) {
+              this.explosionArray[i].setSound(this.sound);
               this.explosionArray[i].set(v.position.x, v.position.y);
               break;
             }
@@ -926,15 +1034,18 @@ class Shot extends Character {
               score = 1000;
             }else if(v.type === "large2") {
               score = 1000;
-              v.item.set(v.position.x, v.position.y);
-            }
-            if(v instanceof Boss === true) {
-              gameScore = Math.min(gameScore + 10000, 99999);
+              for(let i = 0; i < v.itemHeartArray.length; ++i) {
+                if(v.itemHeartArray[i].life === 0) {
+                  v.itemHeartArray[i].set(v.position.x, v.position.y);
+                  break;
+                }
+              }
             }
             gameScore = Math.min(gameScore + score, 99999);
+          }else if(v instanceof Boss === true) {
+            gameScore = Math.min(gameScore + 10000, 99999);
           }
         }
-        this.life = 0;
       }
     });
     this.rotationDraw();
@@ -953,6 +1064,10 @@ class Homing extends Shot {
       this.setSpeed(speed);
       this.setPower(power);
       this.frame = 0;
+
+      if(this.sound != null){
+        this.sound.play();
+      }
   }
 
   update(){
@@ -1013,13 +1128,6 @@ class Homing extends Shot {
                           break;
                       }
                   }
-                  if(v instanceof Enemy === true){
-                      let score = 100;
-                      if(v.type === 'large'){
-                          score = 1000;
-                      }
-                      gameScore = Math.min(gameScore + score, 99999);
-                  }
               }
               this.life = 0;
           }
@@ -1034,7 +1142,7 @@ class Beam extends Character {
   constructor(ctx, x, y, w, h, imagePath) {
     super(ctx, x, y, w, h, 0, imagePath);
     this.vector = new Position(0.0, -1.0);
-    this.power = 3;
+    this.power = 5;
     this.targetArray = [];
     this.explosionArray = [];
   }
@@ -1076,7 +1184,11 @@ class Beam extends Character {
         this.draw();
         this.targetArray.map((v) => {
           if(this.life <= 0 || v.life <= 0) {return;}
-
+          if(v instanceof Boss === true) {
+            if(v.immortalFlg) {
+              return;
+            }
+          }
           if(this.position.y >= v.position.y && v.position.y + v.height / 2 > 0) {
             if(this.position.x + (this.width + v.width) / 2 > v.position.x &&
                this.position.x - (this.width + v.width) / 2 < v.position.x) {
@@ -1085,6 +1197,7 @@ class Beam extends Character {
               if(v.life <= 0) {
                 for(let i = 0; i < this.explosionArray.length; ++i) {
                   if(this.explosionArray[i].life !== true) {
+                    this.explosionArray[i].setSound(this.sound);
                     this.explosionArray[i].set(v.position.x, v.position.y);
                     break;
                   }
@@ -1095,12 +1208,17 @@ class Beam extends Character {
                     score = 1000;
                   }else if(v.type === "large2") {
                     score = 1000;
-                    v.item.set(v.position.x, v.position.y);
+                    for(let i = 0; i < v.itemHeartArray.length; ++i) {
+                      if(v.itemHeartArray[i].life === 0) {
+                        v.itemHeartArray[i].set(v.position.x, v.position.y);
+                        break;
+                      }
+                    }
                   }
-                  if(v instanceof Boss === true) {
-                    gameScore = Math.min(gameScore + 10000, 99999);
-                  }
+
                   gameScore = Math.min(gameScore + score, 99999);
+                }else if(v instanceof Boss === true) {
+                  gameScore = Math.min(gameScore + 10000, 99999);
                 }
               }
             }
@@ -1137,6 +1255,9 @@ class Sword extends Character {
     }
   }
 
+  setGirl(girl) {
+    this.girl = girl;
+  }
 
   setTargets(targets) {
     if(targets != null && Array.isArray(targets) === true && targets.length > 0) {
@@ -1171,12 +1292,20 @@ class Sword extends Character {
           this.frame = 3.14;
           this.targetArray.map((v) => {
             if(this.life <= 0 || v.life <= 0) {return;}
-            let dist = this.position.distance(v.position);
-            if(dist <= (this.height / 2 + v.width)) {
+            if(v instanceof Boss === true) {
+              if(v.immortalFlg) {
+                return;
+              }
+            }
+            let dist = this.girl.position.distance(v.position);
+            if(dist <= (this.height / 2 + this.girl.height / 2 + v.width / 2)) {
               if(this.position.y >= v.position.y) {
                 if(this.position.x + (this.height + v.width) / 2 > v.position.x &&
                    this.position.x - (this.height + v.width) / 2 < v.position.x) {
                   v.life -= this.power;
+                  if(this.sound != null){
+                    this.sound.play();
+                  }
                   console.log(v.life);
                   if(v.life <= 0) {
                     for(let i = 0; i < this.explosionArray.length; ++i) {
@@ -1191,12 +1320,17 @@ class Sword extends Character {
                         score = 2000;
                       }else if(v.type === "large2") {
                         score = 2000;
-                        v.item.set(v.position.x, v.position.y);
+                        for(let i = 0; i < v.itemHeartArray.length; ++i) {
+                          if(v.itemHeartArray[i].life === 0) {
+                            v.itemHeartArray[i].set(v.position.x, v.position.y);
+                            break;
+                          }
+                        }
                       }
-                      if(v instanceof Boss === true) {
-                        gameScore = Math.min(gameScore + 10000, 99999);
-                      }
+
                       gameScore = Math.min(gameScore + score, 99999);
+                    }else if(v instanceof Boss === true) {
+                      gameScore = Math.min(gameScore + 10000, 99999);
                     }
                   }
                 }
@@ -1226,7 +1360,7 @@ class Sword extends Character {
 class Bomb extends Character {
   constructor(ctx, x, y, w, h, imagePath) {
     super(ctx, x, y, w, h, 0, imagePath);
-    this.power = 100;
+    this.power = 150;
     this.targetArray = [];
     this.explosionArray = [];
     this.timeBombArray = [];
@@ -1267,6 +1401,11 @@ class Bomb extends Character {
         if(this.timeBombArray[i].life !== true) {
           this.timeBombArray[i].set(this.position.x, this.position.y);
           this.targetArray.map((v) => {
+            if(v instanceof Boss === true) {
+              if(v.immortalFlg) {
+                return;
+              }
+            }
             if(v.life <= 0) {return;}
             let dist = this.position.distance(v.position);
             if(dist <= this.timeBombArray[i].radius + this.timeBombArray[i].fireSize + v.width / 2) {
@@ -1279,6 +1418,7 @@ class Bomb extends Character {
               if(v.life <= 0) {
                 for(let i = 0; i < this.explosionArray.length; ++i) {
                   if(this.explosionArray[i].life !== true) {
+                    this.explosionArray[i].setSound(this.sound);
                     this.explosionArray[i].set(v.position.x, v.position.y);
                     break;
                   }
@@ -1287,15 +1427,19 @@ class Bomb extends Character {
                   let score = 100;
                   if(v.type === "large") {
                     score = 1000;
-                    v.item.set(v.position.x, v.position.y);
                   }else if(v.type === "large2") {
                     score = 1000;
-                    v.item.set(v.position.x, v.position.y);
+                    for(let i = 0; i < v.itemHeartArray.length; ++i) {
+                      if(v.itemHeartArray[i].life === 0) {
+                        v.itemHeartArray[i].set(v.position.x, v.position.y);
+                        break;
+                      }
+                    }
                   }
-                  if(v instanceof Boss === true) {
-                    gameScore = Math.min(gameScore + 10000, 99999);
-                  }
+
                   gameScore = Math.min(gameScore + score, 99999);
+                }else if(v instanceof Boss === true) {
+                  gameScore = Math.min(gameScore + 10000, 99999);
                 }
               }
             }
@@ -1349,8 +1493,13 @@ class Explosion {
     this.sound = sound;
   }
 
+  setSoundDefault(soundDefault) {
+    this.soundDefault = soundDefault;
+  }
+
   update() {
     if(this.life !== true) {return;}
+    this.sound = this.soundDefault;
     this.ctx.fillStyle = this.color;
     this.ctx.globalAlpha = 0.5;
     let time = (Date.now() - this.startTime) / 1000;
@@ -1393,6 +1542,10 @@ class BombExplosion extends Explosion {
     }
     this.life = true;
     this.startTime = Date.now();
+
+    if(this.sound != null){
+      this.sound.play();
+    }
   }
 
   update() {

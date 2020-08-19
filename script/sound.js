@@ -2,6 +2,7 @@ class Sound {
   constructor() {
     this.ctx = new AudioContext();
     this.source = null;
+    this.node = null;
   }
 
   load(audioPath, callback) {
@@ -30,5 +31,10 @@ class Sound {
       node = null;
     }, false);
     node.start();
+    this.node = node;
+  }
+
+  stop() {
+    this.node.stop();
   }
 }
